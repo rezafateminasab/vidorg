@@ -1,0 +1,43 @@
+#!/bin/bash
+# This script organizes downloaded movie files into seperate folders
+# Seyedreza Fateminasab - 19 July 2020
+
+IFS=$'\n'
+# this loop puts the results of the find command (video files with the extensions mp4, mkv, or avi) in movie_list
+for movie_list in $(find -maxdepth 1 -name '*.mp4' -o -name '*.mkv' -o -name '*.avi');
+do
+	#this loop is run once for each item in movie_list (each video file)
+	for file_name in $movie_list;
+	do
+		#this line splits the video file's name at 4 consecutive digits (movie year)
+		file_name_pieces=(`echo $file_name | perl -ne 'for $piece (split /([0-9]{4})/) { print "$piece\n" }'`)
+		#this line removes the first 2 character (./) added by the find command to the movie title (first piece before 4 consecutive digits)
+		movie_name_raw=${file_name_pieces[0]:2}
+		#this line replaces dots in the movie title with space
+		movie_name_no_dot=${movie_name_raw//./" "}
+		#this if command checks and removes the last character of the movie title if it is NOT an alphanumeric character
+		#in later versions, this should be replaced with a while loop to clean up the movie title
+		if [[ !( ${movie_name_no_dot: -1} =~ '[0-9A-Za-z]' ) ]]
+		then
+			movie_name_no_dot=${movie_name_no_dot%?}
+		fi
+		#this line puts the 4 consecutive digits into the variable movie_year
+		movie_year=${file_name_pieces[1]}
+		#this line defines the folder name by combining the corrected movie title and movie year inside parentheses 
+		folder_name=$movie_name_no_dot"("$movie_year")"
+		#this line makes the folder, if it does not exist already (-p)
+		mkdir -p $folder_name
+		#this line moves the video file into the newly created folder
+		mv $file_name $folder_name
+		#this line removes the first 2 character (./) added by the find command to the video file name
+		real_file_name=${file_name:2}
+		#this line searches for a subtitle file (with srt extension) with the exact name as the video file 
+		subtitle=$(find -maxdepth 1 -name ${real_file_name%???}'srt');
+		#if the subtitle file exists, this following command moves it to the same folder as the video file
+		if [[ $subtitle != '' ]]
+		then
+			mv ${subtitle:2} $folder_name
+		fi
+	done
+done
+unset IFS
