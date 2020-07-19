@@ -15,16 +15,15 @@ do
 		movie_name_raw=${file_name_pieces[0]:2}
 		#this line replaces dots in the movie title with space
 		movie_name_no_dot=${movie_name_raw//./" "}
-		#this if command checks and removes the last character of the movie title if it is NOT an alphanumeric character
-		#in later versions, this should be replaced with a while loop to clean up the movie title
-		if [[ !( ${movie_name_no_dot: -1} =~ '[0-9A-Za-z]' ) ]]
-		then
+		#this loop checks the last character of the movie title string and removes that character if it is NOT an alphanumeric character
+		while [[ !( ${movie_name_no_dot: -1} =~ [0-9A-Za-z] ) ]]
+		do
 			movie_name_no_dot=${movie_name_no_dot%?}
-		fi
+		done
 		#this line puts the 4 consecutive digits into the variable movie_year
 		movie_year=${file_name_pieces[1]}
 		#this line defines the folder name by combining the corrected movie title and movie year inside parentheses 
-		folder_name=$movie_name_no_dot"("$movie_year")"
+		folder_name=$movie_name_no_dot" ("$movie_year")"
 		#this line makes the folder, if it does not exist already (-p)
 		mkdir -p $folder_name
 		#this line moves the video file into the newly created folder
